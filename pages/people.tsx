@@ -4,7 +4,7 @@ import Topbar from "@/components/common/Topbar";
 import FilterTabs from "@/components/common/FilterTabs";
 import PeopleTable from "@/components/people/PeopleTable";
 import PersonDetailCard from "@/components/people/PersonDetailCard";
-import { people } from "@/data/people";
+import { usePeople } from "@/hooks/usePeople";
 
 const neighborFilters = [
   { id: "all", label: "All Neighbors" },
@@ -15,6 +15,7 @@ const neighborFilters = [
 ];
 
 const NeighborsPage = () => {
+  const { people, loading, error } = usePeople();
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortKey, setSortKey] = useState("name");
@@ -61,7 +62,7 @@ const NeighborsPage = () => {
     }
 
     return result;
-  }, [activeFilter, searchTerm, sortKey]);
+  }, [people, activeFilter, searchTerm, sortKey]);
 
   const header = (
     <div className="space-y-4">
@@ -109,6 +110,31 @@ const NeighborsPage = () => {
   const selectedPerson = selectedPersonId
     ? filteredPeople.find((p) => p.id === selectedPersonId)
     : null;
+
+  if (loading) {
+    return (
+      <AdminLayout header={header}>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="text-lg text-gray-600">Loading neighbors...</div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout header={header}>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="text-lg text-red-600 mb-2">Error loading neighbors</div>
+            <div className="text-sm text-gray-600">{error}</div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout header={header}>
