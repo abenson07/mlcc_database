@@ -1,5 +1,6 @@
 import Badge from "@/components/common/Badge";
 import Button from "@/components/common/Button";
+import CopyableText from "@/components/common/CopyableText";
 import { Business } from "@/data/businesses";
 
 type BusinessDetailProps = {
@@ -34,23 +35,21 @@ const BusinessDetail = ({ business }: BusinessDetailProps) => (
             <div>
               <dt className="font-medium text-neutral-900">Email</dt>
               <dd>
-                <a
-                  href={`mailto:${business.email}`}
-                  className="text-primary-600 hover:underline"
-                >
-                  {business.email}
-                </a>
+                <CopyableText
+                  text={business.email}
+                  successMessage="Email copied to clipboard!"
+                  className="cursor-pointer text-primary-600 hover:underline"
+                />
               </dd>
             </div>
             <div>
               <dt className="font-medium text-neutral-900">Phone</dt>
               <dd>
-                <a
-                  href={`tel:${business.phone}`}
-                  className="text-neutral-700 hover:text-neutral-900"
-                >
-                  {business.phone}
-                </a>
+                <CopyableText
+                  text={business.phone}
+                  successMessage="Phone number copied to clipboard!"
+                  className="cursor-pointer text-neutral-700 hover:text-neutral-900"
+                />
               </dd>
             </div>
           </dl>

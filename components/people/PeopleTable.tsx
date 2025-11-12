@@ -1,13 +1,17 @@
 import { ReactNode } from "react";
 import Badge from "@/components/common/Badge";
+import CopyableText from "@/components/common/CopyableText";
 import Table, { TableColumn } from "@/components/common/Table";
 import Button from "@/components/common/Button";
 import { Person } from "@/data/people";
 
 type PeopleTableProps = {
   data: Person[];
+  selectedId?: string;
+  onRowClick?: (person: Person) => void;
   onEdit?: (person: Person) => void;
   onView?: (person: Person) => void;
+  onClose?: () => void;
 };
 
 const membershipVariants: Record<Person["membershipType"], "default" | "success" | "info"> = {
@@ -25,22 +29,51 @@ const columns: TableColumn<Person>[] = [
   { key: "volunteerInterests", header: "Volunteer Interests", width: "240px" }
 ];
 
-const PeopleTable = ({ data, onEdit, onView }: PeopleTableProps) => (
+const PeopleTable = ({ data, selectedId, onRowClick, onEdit, onView, onClose }: PeopleTableProps) => (
   <Table
     columns={columns}
     data={data}
     caption="People directory for the MLCC community"
-    rowAction={(person) => (
-      <div className="flex justify-end gap-2">
-        {/* TODO: Replace inline actions with modal or drawer once edit/view flows exist */}
-        <Button variant="ghost" size="sm" onClick={() => onView?.(person)}>
-          View
-        </Button>
-        <Button variant="secondary" size="sm" onClick={() => onEdit?.(person)}>
-          Edit
-        </Button>
-      </div>
-    )}
+    selectedId={selectedId}
+    onRowClick={onRowClick}
+    rowAction={(person) => {
+      const isSelected = selectedId === person.id;
+      return (
+        <div className="flex justify-end gap-2">
+          {isSelected ? (
+            <Button variant="ghost" size="sm" onClick={(e) => {
+              e.stopPropagation();
+              onClose?.();
+            }}>
+              Close
+            </Button>
+          ) : (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onView?.(person);
+                }}
+              >
+                View
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit?.(person);
+                }}
+              >
+                Edit
+              </Button>
+            </>
+          )}
+        </div>
+      );
+    }}
   />
 );
 
@@ -49,6 +82,13 @@ const renderers: Partial<Record<keyof Person, (person: Person) => ReactNode>> = 
     <Badge variant={membershipVariants[person.membershipType]}>
       {person.membershipType}
     </Badge>
+  ),
+  email: (person) => (
+    <CopyableText
+      text={person.email}
+      successMessage="Email copied to clipboard!"
+      className="cursor-pointer text-primary-600 hover:underline"
+    />
   ),
   volunteerInterests: (person) => (
     <div className="flex flex-wrap gap-1">

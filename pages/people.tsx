@@ -3,6 +3,7 @@ import AdminLayout from "@/components/layout/AdminLayout";
 import Topbar from "@/components/common/Topbar";
 import FilterTabs from "@/components/common/FilterTabs";
 import PeopleTable from "@/components/people/PeopleTable";
+import PersonDetailCard from "@/components/people/PersonDetailCard";
 import { people } from "@/data/people";
 
 const neighborFilters = [
@@ -17,6 +18,7 @@ const NeighborsPage = () => {
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortKey, setSortKey] = useState("name");
+  const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
 
   const filteredPeople = useMemo(() => {
     let result = [...people];
@@ -104,19 +106,44 @@ const NeighborsPage = () => {
     </div>
   );
 
+  const selectedPerson = selectedPersonId
+    ? filteredPeople.find((p) => p.id === selectedPersonId)
+    : null;
+
   return (
     <AdminLayout header={header}>
-      <PeopleTable
-        data={filteredPeople}
-        onView={(person) => {
-          // TODO: Navigate to person detail once route is defined.
-          console.info("view person", person.id);
-        }}
-        onEdit={(person) => {
-          // TODO: Trigger edit flow once backend mutation exists.
-          console.info("edit person", person.id);
-        }}
-      />
+      <div className="flex gap-6">
+        <div className={selectedPerson ? "w-2/3 transition-all duration-300" : "w-full transition-all duration-300"}>
+          <PeopleTable
+            data={filteredPeople}
+            selectedId={selectedPersonId || undefined}
+            onRowClick={(person) => {
+              setSelectedPersonId(person.id);
+            }}
+            onClose={() => {
+              setSelectedPersonId(null);
+            }}
+            onView={(person) => {
+              // TODO: Navigate to person detail once route is defined.
+              console.info("view person", person.id);
+            }}
+            onEdit={(person) => {
+              // TODO: Trigger edit flow once backend mutation exists.
+              console.info("edit person", person.id);
+            }}
+          />
+        </div>
+        {selectedPerson && (
+          <div className="w-1/3 transition-all duration-300">
+            <PersonDetailCard
+              person={selectedPerson}
+              onClose={() => {
+                setSelectedPersonId(null);
+              }}
+            />
+          </div>
+        )}
+      </div>
     </AdminLayout>
   );
 };

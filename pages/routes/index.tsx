@@ -5,6 +5,7 @@ import FilterTabs from "@/components/common/FilterTabs";
 import RouteTable from "@/components/routes/RouteTable";
 import DelivererTable from "@/components/routes/DelivererTable";
 import OpenRoutesTable from "@/components/routes/OpenRoutesTable";
+import RouteDetailCard from "@/components/routes/RouteDetailCard";
 import { deliverers, openRoutes, routes } from "@/data/routes";
 
 type TabOption = "byRoute" | "byDeliverer" | "openRoutes";
@@ -18,6 +19,7 @@ const routeTabs = [
 const RoutesPage = () => {
   const [activeTab, setActiveTab] = useState<TabOption>("byRoute");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
 
   const normalizedSearch = searchTerm.toLowerCase();
 
@@ -49,6 +51,12 @@ const RoutesPage = () => {
     );
   }, [normalizedSearch]);
 
+  // Reset selected route when switching tabs
+  const handleTabChange = (id: string) => {
+    setActiveTab(id as TabOption);
+    setSelectedRouteId(null);
+  };
+
   const header = (
     <div className="space-y-4">
       <Topbar
@@ -71,25 +79,56 @@ const RoutesPage = () => {
               ? deliverers.length
               : openRoutes.length
         }))}
-        onTabChange={(id) => setActiveTab(id as TabOption)}
+        onTabChange={handleTabChange}
       />
     </div>
   );
 
+  const selectedRoute = selectedRouteId
+    ? filteredRoutes.find((r) => r.id === selectedRouteId)
+    : null;
+
+  const selectedRouteDeliverer = selectedRoute
+    ? deliverers.find((d) => d.name === selectedRoute.distributor) || null
+    : null;
+
   return (
     <AdminLayout header={header}>
       {activeTab === "byRoute" && (
-        <RouteTable
-          data={filteredRoutes}
-          onAssign={(route) => {
-            // TODO: Connect to assignment workflow.
-            console.info("assign route", route.id);
-          }}
-          onPrint={(route) => {
-            // TODO: Generate printable route sheet.
-            console.info("print route", route.id);
-          }}
-        />
+        <div className="flex gap-6">
+          <div className={selectedRoute ? "w-2/3 transition-all duration-300" : "w-full transition-all duration-300"}>
+            <RouteTable
+              data={filteredRoutes}
+              deliverers={deliverers}
+              selectedId={selectedRouteId || undefined}
+              onRowClick={(route) => {
+                setSelectedRouteId(route.id);
+              }}
+              onClose={() => {
+                setSelectedRouteId(null);
+              }}
+              onAssign={(route) => {
+                // TODO: Connect to assignment workflow.
+                console.info("assign route", route.id);
+              }}
+              onPrint={(route) => {
+                // TODO: Generate printable route sheet.
+                console.info("print route", route.id);
+              }}
+            />
+          </div>
+          {selectedRoute && (
+            <div className="w-1/3 transition-all duration-300">
+              <RouteDetailCard
+                route={selectedRoute}
+                deliverer={selectedRouteDeliverer}
+                onClose={() => {
+                  setSelectedRouteId(null);
+                }}
+              />
+            </div>
+          )}
+        </div>
       )}
       {activeTab === "byDeliverer" && (
         <DelivererTable

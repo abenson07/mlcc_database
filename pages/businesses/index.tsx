@@ -4,6 +4,7 @@ import AdminLayout from "@/components/layout/AdminLayout";
 import Topbar from "@/components/common/Topbar";
 import FilterTabs from "@/components/common/FilterTabs";
 import BusinessTable from "@/components/businesses/BusinessTable";
+import BusinessDetailCard from "@/components/businesses/BusinessDetailCard";
 import { businesses, BusinessStatus } from "@/data/businesses";
 
 const businessFilters: { id: "all" | BusinessStatus; label: string }[] = [
@@ -17,6 +18,7 @@ const BusinessesPage = () => {
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
 
   const filteredBusinesses = useMemo(() => {
     const normalized = searchTerm.toLowerCase();
@@ -64,20 +66,43 @@ const BusinessesPage = () => {
     </div>
   );
 
+  const selectedBusiness = selectedBusinessId
+    ? filteredBusinesses.find((b) => b.id === selectedBusinessId)
+    : null;
+
   return (
     <AdminLayout header={header}>
-      <BusinessTable
-        data={filteredBusinesses}
-        onView={(business) => {
-          router.push(`/businesses/${business.id}`);
-        }}
-        onEmail={(business) => {
-          // TODO: Replace with integrated email template action.
-          if (typeof window !== "undefined") {
-            window.location.href = `mailto:${business.email}`;
-          }
-        }}
-      />
+      <div className="flex gap-6">
+        <div className={selectedBusiness ? "w-2/3 transition-all duration-300" : "w-full transition-all duration-300"}>
+          <BusinessTable
+            data={filteredBusinesses}
+            selectedId={selectedBusinessId || undefined}
+            onRowClick={(business) => {
+              setSelectedBusinessId(business.id);
+            }}
+            onClose={() => {
+              setSelectedBusinessId(null);
+            }}
+            onView={(business) => {
+              router.push(`/businesses/${business.id}`);
+            }}
+            onEmail={(business) => {
+              // TODO: Replace with integrated email template action.
+              // Email is now copied to clipboard via the Email button
+            }}
+          />
+        </div>
+        {selectedBusiness && (
+          <div className="w-1/3 transition-all duration-300">
+            <BusinessDetailCard
+              business={selectedBusiness}
+              onClose={() => {
+                setSelectedBusinessId(null);
+              }}
+            />
+          </div>
+        )}
+      </div>
     </AdminLayout>
   );
 };

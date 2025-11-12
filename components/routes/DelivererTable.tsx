@@ -1,4 +1,5 @@
 import Button from "@/components/common/Button";
+import CopyableText from "@/components/common/CopyableText";
 import { Deliverer, Route } from "@/data/routes";
 
 type DelivererTableProps = {
@@ -68,9 +69,11 @@ const DelivererTable = ({
                   </p>
                 </div>
                 <div className="flex grow px-4 py-3">
-                  <p className="text-sm text-neutral-700">
-                    {deliverer.email}
-                  </p>
+                  <CopyableText
+                    text={deliverer.email}
+                    successMessage="Email copied to clipboard!"
+                    className="cursor-pointer text-sm text-neutral-700 hover:text-neutral-900 hover:underline"
+                  />
                 </div>
               </div>
               <div className="flex items-center gap-2 px-4 py-3">
