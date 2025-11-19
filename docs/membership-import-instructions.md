@@ -98,3 +98,4 @@ The script will:
 ### CSV file not found
 - Update the `csvPath` variable in `scripts/seed-memberships.ts` to point to your CSV location
 
+

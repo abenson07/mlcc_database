@@ -14,6 +14,7 @@ export type TierInfo = {
   tier: string;
   lastRenewal?: string;
   stripeSubscriptionId?: string;
+  stripeCustomerId?: string;
 };
 
 export type DuplicateMembership = {

@@ -31,3 +31,4 @@ export const serverSupabase = createClient(supabaseUrl, supabaseServiceRoleKey, 
   }
 })
 
+

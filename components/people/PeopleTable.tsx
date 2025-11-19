@@ -1,9 +1,11 @@
-import { ReactNode, useMemo, useState } from "react";
+import { ReactNode, useMemo, useState, useRef, useEffect } from "react";
 import CopyableText from "@/components/common/CopyableText";
 import Table, { TableColumn } from "@/components/common/Table";
 import Button from "@/components/common/Button";
 import { Person, DuplicateMembership, TierInfo } from "@/data/people";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
+
+type SortDirection = "asc" | "desc" | null;
 
 type PeopleTableProps = {
   data: Person[];
@@ -48,6 +50,9 @@ const duplicatesColumns: TableColumn<DuplicateRow>[] = [
 const TierBadge = ({ tierInfo }: { tierInfo: TierInfo }) => {
   const { copyToClipboard } = useCopyToClipboard();
   const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const badgeRef = useRef<HTMLSpanElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "No renewal date";
@@ -55,31 +60,71 @@ const TierBadge = ({ tierInfo }: { tierInfo: TierInfo }) => {
     return date.toLocaleDateString();
   };
 
-  const handleClick = () => {
-    if (tierInfo.stripeSubscriptionId) {
-      copyToClipboard(tierInfo.stripeSubscriptionId, "Subscription ID copied to clipboard!");
-    } else {
-      copyToClipboard("", "No subscription ID available");
+  const updateTooltipPosition = () => {
+    if (badgeRef.current) {
+      const rect = badgeRef.current.getBoundingClientRect();
+      setTooltipPosition({
+        top: rect.top - 8, // Position above the badge
+        left: rect.left + rect.width / 2, // Center horizontally
+      });
     }
   };
 
+  const handleMouseEnter = () => {
+    setShowTooltip(true);
+    updateTooltipPosition();
+  };
+
+  const handleClick = () => {
+    if (tierInfo.stripeCustomerId) {
+      copyToClipboard(tierInfo.stripeCustomerId, "Customer ID copied to clipboard!");
+    } else if (tierInfo.stripeSubscriptionId) {
+      copyToClipboard(tierInfo.stripeSubscriptionId, "Subscription ID copied to clipboard!");
+    } else {
+      copyToClipboard("", "No customer ID available");
+    }
+  };
+
+  // Update tooltip position on scroll and resize
+  useEffect(() => {
+    if (showTooltip) {
+      const handleUpdate = () => updateTooltipPosition();
+      window.addEventListener('scroll', handleUpdate, true);
+      window.addEventListener('resize', handleUpdate);
+      return () => {
+        window.removeEventListener('scroll', handleUpdate, true);
+        window.removeEventListener('resize', handleUpdate);
+      };
+    }
+  }, [showTooltip]);
+
   return (
-    <span className="relative inline-block">
-      <span
-        className="cursor-pointer text-primary-700 hover:text-primary-800 hover:underline transition-colors"
-        onClick={handleClick}
-        onMouseEnter={() => setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
-      >
-        {tierInfo.tier}
+    <>
+      <span className="relative inline-block" ref={badgeRef}>
+        <span
+          className="cursor-pointer text-primary-700 hover:text-primary-800 hover:underline transition-colors"
+          onClick={handleClick}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={() => setShowTooltip(false)}
+        >
+          {tierInfo.tier}
+        </span>
       </span>
       {showTooltip && (
-        <div className="absolute z-10 px-2 py-1 text-xs text-white bg-gray-800 rounded shadow-lg bottom-full left-1/2 transform -translate-x-1/2 mb-1 whitespace-nowrap">
+        <div 
+          ref={tooltipRef}
+          className="fixed z-[9999] px-2 py-1 text-xs text-white bg-gray-800 rounded shadow-lg whitespace-nowrap pointer-events-none"
+          style={{
+            top: `${tooltipPosition.top}px`,
+            left: `${tooltipPosition.left}px`,
+            transform: 'translate(-50%, -100%)',
+          }}
+        >
           {tierInfo.lastRenewal ? `Renewed: ${formatDate(tierInfo.lastRenewal)}` : "No renewal date"}
           <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
         </div>
       )}
-    </span>
+    </>
   );
 };
 
@@ -92,12 +137,44 @@ const PeopleTable = ({
   showDuplicatesView = false,
   duplicateMemberships = []
 }: PeopleTableProps) => {
+  const [sortColumn, setSortColumn] = useState<keyof Person | string | undefined>();
+  const [sortDirection, setSortDirection] = useState<SortDirection>(null);
+
   const columns = useMemo(() => {
     if (showDuplicatesView) {
       return duplicatesColumns;
     }
     return showMembersColumns ? membersColumns : defaultColumns;
   }, [showMembersColumns, showDuplicatesView]);
+
+  const handleSort = (columnKey: keyof Person | string, direction: "asc" | "desc") => {
+    setSortColumn(columnKey);
+    setSortDirection(direction);
+  };
+
+  const sortedData = useMemo(() => {
+    if (!sortColumn || !sortDirection) return data;
+
+    return [...data].sort((a, b) => {
+      const aValue = a[sortColumn as keyof Person];
+      const bValue = b[sortColumn as keyof Person];
+
+      // Handle undefined/null values
+      if (aValue == null && bValue == null) return 0;
+      if (aValue == null) return 1;
+      if (bValue == null) return -1;
+
+      // Convert to strings for comparison
+      const aStr = String(aValue).toLowerCase();
+      const bStr = String(bValue).toLowerCase();
+
+      if (sortDirection === "asc") {
+        return aStr.localeCompare(bStr);
+      } else {
+        return bStr.localeCompare(aStr);
+      }
+    });
+  }, [data, sortColumn, sortDirection]);
 
   // Transform duplicate memberships into table rows
   const duplicateRows: DuplicateRow[] = useMemo(() => {
@@ -188,7 +265,7 @@ const PeopleTable = ({
   if (showDuplicatesView) {
     const columnsWithRenderers = duplicatesColumns.map((column) => {
       const renderer = duplicateRenderers[column.key as keyof DuplicateRow];
-      return renderer ? { ...column, render: renderer } : column;
+      return renderer ? { ...column, render: renderer, sortable: true } : { ...column, sortable: true };
     });
 
     return (
@@ -197,6 +274,9 @@ const PeopleTable = ({
         data={duplicateRows}
         caption={getCaption()}
         selectedId={selectedId}
+        onSort={handleSort}
+        sortColumn={sortColumn}
+        sortDirection={sortDirection}
       />
     );
   }
@@ -204,16 +284,21 @@ const PeopleTable = ({
   // Render regular people view
   const columnsWithRenderers = columns.map((column) => {
     const renderer = personRenderers[column.key as keyof Person];
-    return renderer ? { ...column, render: renderer } : column;
+    return renderer 
+      ? { ...column, render: renderer, sortable: true } 
+      : { ...column, sortable: true };
   });
 
   return (
     <Table<Person>
       columns={columnsWithRenderers}
-      data={data}
+      data={sortedData}
       caption={getCaption()}
       selectedId={selectedId}
       onRowClick={onRowClick}
+      onSort={handleSort}
+      sortColumn={sortColumn}
+      sortDirection={sortDirection}
       rowAction={(person) => {
         const isSelected = selectedId === person.id;
         if (!isSelected) return null;

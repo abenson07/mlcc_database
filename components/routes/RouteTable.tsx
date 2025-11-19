@@ -1,29 +1,26 @@
 import { ReactNode } from "react";
 import Table, { TableColumn } from "@/components/common/Table";
 import Button from "@/components/common/Button";
-import { Deliverer, Route } from "@/data/routes";
+import { Route } from "@/data/routes";
 
 type RouteTableProps = {
   data: Route[];
-  deliverers?: Deliverer[];
   selectedId?: string;
   onRowClick?: (route: Route) => void;
   onClose?: () => void;
 };
 
 const columns: TableColumn<Route>[] = [
-  { key: "name", header: "Route name", width: "30%" },
-  { key: "deliverer", header: "Deliverer", width: "194px" },
-  { key: "email", header: "Email", width: "256px" },
-  { key: "leaflets", header: "# of leaflets", align: "center", width: "128px" },
-  { key: "routeType", header: "Route type", width: "256px" }
+  { key: "name", header: "Route name", width: "300px" },
+  { key: "deliverer", header: "Deliverer", width: "200px" },
+  { key: "email", header: "Email", width: "250px" },
+  { key: "leaflets", header: "# of leaflets", align: "center", width: "150px" },
+  { key: "routeType", header: "Route type", width: "200px" }
 ];
 
-const RouteTable = ({ data, deliverers = [], selectedId, onRowClick, onAssign, onPrint, onClose }: RouteTableProps) => {
-  const getDelivererInfo = (route: Route) => {
-    if (!route.distributor) return null;
-    return deliverers.find((d) => d.name === route.distributor) || null;
-  };
+const RouteTable = ({ data, selectedId, onRowClick, onClose }: RouteTableProps) => {
+  // Filter out routes without primary_deliverer_id (unclaimed routes)
+  const claimedRoutes = data.filter(route => route.primary_deliverer_id);
 
   const renderers: Partial<Record<keyof Route | "deliverer" | "email", (route: Route) => ReactNode>> = {
     name: (route) => (
@@ -34,7 +31,7 @@ const RouteTable = ({ data, deliverers = [], selectedId, onRowClick, onAssign, o
       </div>
     ),
     deliverer: (route) => {
-      const deliverer = getDelivererInfo(route);
+      const deliverer = route.deliverer;
       if (!deliverer) {
         return <span className="text-neutral-400">Unassigned</span>;
       }
@@ -46,7 +43,7 @@ const RouteTable = ({ data, deliverers = [], selectedId, onRowClick, onAssign, o
       );
     },
     email: (route) => {
-      const deliverer = getDelivererInfo(route);
+      const deliverer = route.deliverer;
       if (!deliverer) {
         return <span className="text-neutral-400">—</span>;
       }
@@ -70,7 +67,7 @@ const RouteTable = ({ data, deliverers = [], selectedId, onRowClick, onAssign, o
   return (
     <Table
       columns={columns}
-      data={data}
+      data={claimedRoutes}
       caption="Newsletter delivery routes grouped by route"
       selectedId={selectedId}
       onRowClick={onRowClick}

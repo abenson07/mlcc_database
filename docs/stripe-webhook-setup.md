@@ -212,3 +212,4 @@ Successfully updated membership 123 status to "Cancelled"
 - Consider adding webhook event logging to a separate table for audit purposes
 - Handle edge cases (e.g., creating new memberships when customer doesn't exist)
 
+

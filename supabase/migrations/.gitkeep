@@ -26,3 +26,4 @@ Example: `20250111120000_add_route_assignments.sql`
 - Always enable RLS and create policies
 - Always regenerate types after migrations
 
+

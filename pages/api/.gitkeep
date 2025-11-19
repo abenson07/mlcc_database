@@ -15,3 +15,4 @@ This directory contains Next.js API routes for server-side operations.
 - All responses should use generated database types
 - Handle errors consistently and return appropriate HTTP status codes
 
+

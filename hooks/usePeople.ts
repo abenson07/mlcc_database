@@ -74,7 +74,7 @@ export const usePeople = () => {
       // Get all memberships (not just active, to catch all duplicates)
       const { data: allMemberships, error: memError } = await supabase
         .from('memberships')
-        .select('id, customer_email, status, tier, last_renewal, stripe_subscription_id')
+        .select('id, customer_email, status, tier, last_renewal, stripe_subscription_id, stripe_customer_id')
         .not('customer_email', 'is', null);
 
       if (memError) {
@@ -113,12 +113,13 @@ export const usePeople = () => {
         if (memberships.length > 1) {
           // Include ALL memberships as separate TierInfo objects (don't group by tier)
           // Sort by renewal date (most recent first)
-          const tiers: { tier: string; lastRenewal?: string; stripeSubscriptionId?: string }[] = memberships
+          const tiers: { tier: string; lastRenewal?: string; stripeSubscriptionId?: string; stripeCustomerId?: string }[] = memberships
             .filter(m => m.tier) // Only include memberships with a tier
             .map(m => ({
               tier: m.tier!,
               lastRenewal: m.last_renewal || undefined,
-              stripeSubscriptionId: m.stripe_subscription_id || undefined
+              stripeSubscriptionId: m.stripe_subscription_id || undefined,
+              stripeCustomerId: m.stripe_customer_id || undefined
             }))
             .sort((a, b) => {
               // Sort by renewal date descending (most recent first)

@@ -1,11 +1,18 @@
 import { useState, useEffect } from "react";
 import Badge from "@/components/common/Badge";
 import Button from "@/components/common/Button";
-import { Route, Deliverer } from "@/data/routes";
+import { Route } from "@/data/routes";
+
+type DelivererInfo = {
+  id: string;
+  name: string;
+  email: string;
+  address: string;
+};
 
 type RouteDetailCardProps = {
   route: Route;
-  deliverer?: Deliverer | null;
+  deliverer?: DelivererInfo | null;
   onClose: () => void;
 };
 

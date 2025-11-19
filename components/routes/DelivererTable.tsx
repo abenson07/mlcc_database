@@ -1,19 +1,24 @@
 import Button from "@/components/common/Button";
 import CopyableText from "@/components/common/CopyableText";
-import { Deliverer, Route } from "@/data/routes";
+import { Route } from "@/data/routes";
+
+type DelivererInfo = {
+  id: string;
+  name: string;
+  email: string;
+  address: string;
+};
 
 type DelivererTableProps = {
-  data: Deliverer[];
   routes: Route[];
   searchTerm?: string;
-  onSkip?: (deliverer: Deliverer) => void;
-  onUnassign?: (deliverer: Deliverer) => void;
+  onSkip?: (deliverer: DelivererInfo) => void;
+  onUnassign?: (deliverer: DelivererInfo) => void;
   onSkipRoute?: (route: Route) => void;
   onUnassignRoute?: (route: Route) => void;
 };
 
 const DelivererTable = ({
-  data,
   routes,
   searchTerm,
   onSkip,
@@ -21,23 +26,44 @@ const DelivererTable = ({
   onSkipRoute,
   onUnassignRoute
 }: DelivererTableProps) => {
+  // Group routes by primary_deliverer_id and extract unique deliverers
+  const deliverersMap = new Map<string, { deliverer: DelivererInfo; routes: Route[] }>();
+  
+  routes.forEach((route) => {
+    if (route.primary_deliverer_id && route.deliverer) {
+      if (!deliverersMap.has(route.primary_deliverer_id)) {
+        deliverersMap.set(route.primary_deliverer_id, {
+          deliverer: route.deliverer,
+          routes: []
+        });
+      }
+      deliverersMap.get(route.primary_deliverer_id)!.routes.push(route);
+    }
+  });
+
+  const deliverers = Array.from(deliverersMap.values());
+
   const filteredDeliverers = searchTerm
-    ? data.filter((deliverer) => {
+    ? deliverers.filter(({ deliverer, routes: delivererRoutes }) => {
         const normalized = searchTerm.toLowerCase();
-        return (
+        const delivererMatches = 
           deliverer.name.toLowerCase().includes(normalized) ||
           deliverer.address.toLowerCase().includes(normalized) ||
-          deliverer.email.toLowerCase().includes(normalized)
+          deliverer.email.toLowerCase().includes(normalized);
+        
+        const routeMatches = delivererRoutes.some(route =>
+          route.name.toLowerCase().includes(normalized) ||
+          route.routeType?.toLowerCase().includes(normalized) ||
+          route.leaflets.toString().includes(normalized)
         );
+        
+        return delivererMatches || routeMatches;
       })
-    : data;
+    : deliverers;
 
   return (
     <div className="space-y-3">
-      {filteredDeliverers.map((deliverer) => {
-        const assignedRoutes = routes.filter(
-          (route) => route.distributor === deliverer.name
-        );
+      {filteredDeliverers.map(({ deliverer, routes: assignedRoutes }) => {
 
         const filteredRoutes = searchTerm
           ? assignedRoutes.filter((route) => {

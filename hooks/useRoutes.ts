@@ -12,9 +12,18 @@ export const useRoutes = () => {
       setLoading(true);
       setError(null);
 
+      // Fetch routes with joined deliverer information from people table
       const { data, error: supabaseError } = await supabase
         .from('routes')
-        .select('*');
+        .select(`
+          *,
+          deliverer:people!primary_deliverer_id(
+            id,
+            full_name,
+            email,
+            address
+          )
+        `);
 
       if (supabaseError) {
         console.error('Supabase error details:', supabaseError);
@@ -58,17 +67,32 @@ export const useRoutes = () => {
         return routeTypeMap[type] || undefined;
       };
 
-      const mappedRoutes: Route[] = (data || []).map((row: any) => ({
-        id: row.id?.toString() || '',
-        name: row.route_name || row.name || row.full_name || '',
-        leaflets: typeof row.leaflet_count === 'number' ? row.leaflet_count :
-                 typeof row.leaflets === 'number' ? row.leaflets :
-                 parseInt(row.leaflet_count || row.leaflets || '0', 10),
-        dropoffLocation: row.dropoff_location || row.dropoffLocation || row.drop_off_location || '',
-        distributor: row.distributor || row.deliverer || null,
-        status: getStatus(row.status),
-        routeType: getRouteType(row.route_type || row.routeType || row.route_type_id),
-      }));
+      const mappedRoutes: Route[] = (data || []).map((row: any) => {
+        // Handle deliverer data (can be object, array, or null from join)
+        const delivererData = row.deliverer 
+          ? (Array.isArray(row.deliverer) ? row.deliverer[0] : row.deliverer)
+          : null;
+
+        return {
+          id: row.id?.toString() || '',
+          name: row.route_name || row.name || row.full_name || '',
+          leaflets: typeof row.leaflet_count === 'number' ? row.leaflet_count :
+                   typeof row.leaflets === 'number' ? row.leaflets :
+                   parseInt(row.leaflet_count || row.leaflets || '0', 10),
+          dropoffLocation: row.dropoff_location || row.dropoffLocation || row.drop_off_location || '',
+          distributor: row.distributor || row.deliverer || null,
+          status: getStatus(row.status),
+          routeType: getRouteType(row.route_type || row.routeType || row.route_type_id),
+          primary_deliverer_id: row.primary_deliverer_id || null,
+          primary_deliverer_email: row.primary_deliverer_email || null,
+          deliverer: delivererData ? {
+            id: delivererData.id?.toString() || '',
+            name: delivererData.full_name || delivererData.name || '',
+            email: delivererData.email || '',
+            address: delivererData.address || '',
+          } : null,
+        };
+      });
 
       setRoutes(mappedRoutes);
     } catch (err) {
