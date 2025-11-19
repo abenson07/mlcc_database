@@ -6,13 +6,22 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:migrate": "supabase db push",
+    "db:reset": "supabase db reset",
+    "db:types": "supabase gen types typescript --linked > src/types/database.types.ts",
+    "db:link": "supabase link --project-ref"
   },
   "dependencies": {
-    "next": "14.1.0",
+    "@supabase/supabase-js": "^2.81.1",
     "clsx": "2.1.0",
+    "csv-parse": "^6.1.0",
+    "dotenv": "^17.2.3",
+    "next": "14.1.0",
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
+    "stripe": "^14.21.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "20.11.24",
@@ -20,8 +29,8 @@
     "@types/react-dom": "18.2.18",
     "autoprefixer": "10.4.17",
     "postcss": "8.4.35",
+    "supabase": "^1.183.1",
     "tailwindcss": "3.4.1",
     "typescript": "5.3.3"
   }
 }
-

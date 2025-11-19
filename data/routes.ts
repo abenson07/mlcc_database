@@ -9,6 +9,14 @@ export type Route = {
   distributor: string | null;
   status: RouteStatus;
   routeType?: RouteType;
+  primary_deliverer_id?: string | null;
+  primary_deliverer_email?: string | null;
+  deliverer?: {
+    id: string;
+    name: string;
+    email: string;
+    address: string;
+  } | null;
 };
 
 export type Deliverer = {

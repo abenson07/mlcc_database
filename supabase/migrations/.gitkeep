@@ -1,0 +1,29 @@
+# Supabase Migrations Directory
+
+All database schema changes must be created as migration files in this directory.
+
+## Naming Convention
+
+Migration files must be named with timestamp prefix:
+```
+YYYYMMDDHHMMSS_feature_name.sql
+```
+
+Example: `20250111120000_add_route_assignments.sql`
+
+## Workflow
+
+1. Create migration: `supabase migration new feature_name`
+2. Write SQL in the generated file
+3. Test locally (if using local Supabase): `npm run db:reset`
+4. Push to remote: `npm run db:migrate`
+5. Regenerate types: `npm run db:types`
+
+## Important
+
+- Never modify tables directly in Supabase dashboard
+- Always use migrations for schema changes
+- Always enable RLS and create policies
+- Always regenerate types after migrations
+
+

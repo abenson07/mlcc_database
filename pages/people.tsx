@@ -1,44 +1,51 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import Topbar from "@/components/common/Topbar";
 import FilterTabs from "@/components/common/FilterTabs";
 import PeopleTable from "@/components/people/PeopleTable";
 import PersonDetailCard from "@/components/people/PersonDetailCard";
-import { people } from "@/data/people";
+import PersonFormModal from "@/components/people/PersonFormModal";
+import { usePeople } from "@/hooks/usePeople";
+import { useToast } from "@/components/common/ToastProvider";
+import { supabase } from "@/lib/supabaseClient";
+import { Person } from "@/data/people";
 
 const neighborFilters = [
   { id: "all", label: "All Neighbors" },
   { id: "members", label: "Members" },
-  { id: "nonMembers", label: "Non-Members" },
-  { id: "interestedInVolunteering", label: "Interested in Volunteering" },
-  { id: "byHousehold", label: "By Household" }
+  { id: "duplicates", label: "Duplicates" }
 ];
 
 const NeighborsPage = () => {
+  const { people, duplicateMemberships, loading, error, refetch } = usePeople();
+  const { showToast } = useToast();
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortKey, setSortKey] = useState("name");
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const filteredPeople = useMemo(() => {
     let result = [...people];
 
+    // Filter for members: must have membershipId and status must be active
     if (activeFilter === "members") {
-      result = result.filter((person) => person.isMember);
-    } else if (activeFilter === "nonMembers") {
-      result = result.filter((person) => !person.isMember);
-    } else if (activeFilter === "interestedInVolunteering") {
-      result = result.filter((person) => person.volunteerInterests.length > 0);
-    } else if (activeFilter === "byHousehold") {
-      // Group by household - for now, just show all but sorted by household
-      result = result.sort((a, b) => {
-        const householdA = a.householdId || "";
-        const householdB = b.householdId || "";
-        if (householdA !== householdB) {
-          return householdA.localeCompare(householdB);
-        }
-        return a.name.localeCompare(b.name);
-      });
+      result = result.filter(
+        (person) =>
+          person.membershipId && 
+          person.membershipStatus?.toLowerCase() === 'active'
+      );
+    }
+
+    // Filter for duplicates: show people whose emails appear in duplicateMemberships
+    if (activeFilter === "duplicates") {
+      const duplicateEmails = new Set(
+        duplicateMemberships.map(dup => dup.email.toLowerCase().trim())
+      );
+      result = result.filter(
+        (person) => person.email && duplicateEmails.has(person.email.toLowerCase().trim())
+      );
     }
 
     if (searchTerm) {
@@ -51,17 +58,12 @@ const NeighborsPage = () => {
       );
     }
 
-    if (activeFilter !== "byHousehold") {
-      result.sort((a, b) => {
-        if (sortKey === "membershipType") {
-          return a.membershipType.localeCompare(b.membershipType);
-        }
-        return a.name.localeCompare(b.name);
-      });
-    }
+    result.sort((a, b) => {
+      return a.name.localeCompare(b.name);
+    });
 
     return result;
-  }, [activeFilter, searchTerm, sortKey]);
+  }, [people, activeFilter, searchTerm, sortKey, duplicateMemberships]);
 
   const header = (
     <div className="space-y-4">
@@ -69,13 +71,12 @@ const NeighborsPage = () => {
         title="Neighbors"
         ctaLabel="Add new neighbor"
         onAdd={() => {
-          // TODO: Open create-person modal or route once backend exists.
+          setIsModalOpen(true);
         }}
         onSearch={setSearchTerm}
         searchPlaceholder="Search by name, email, or address"
         sortOptions={[
-          { label: "Sort by name", value: "name" },
-          { label: "Sort by membership", value: "membershipType" }
+          { label: "Sort by name", value: "name" }
         ]}
         onSortChange={setSortKey}
       />
@@ -86,15 +87,13 @@ const NeighborsPage = () => {
           if (filter.id === "all") {
             badgeCount = people.length;
           } else if (filter.id === "members") {
-            badgeCount = people.filter((p) => p.isMember).length;
-          } else if (filter.id === "nonMembers") {
-            badgeCount = people.filter((p) => !p.isMember).length;
-          } else if (filter.id === "interestedInVolunteering") {
-            badgeCount = people.filter((p) => p.volunteerInterests.length > 0).length;
-          } else if (filter.id === "byHousehold") {
-            // Count unique households
-            const households = new Set(people.map((p) => p.householdId).filter(Boolean));
-            badgeCount = households.size;
+            // Count active members
+            badgeCount = people.filter(
+              (p) => p.membershipId && p.membershipStatus?.toLowerCase() === 'active'
+            ).length;
+          } else if (filter.id === "duplicates") {
+            // Count duplicate memberships
+            badgeCount = duplicateMemberships.length;
           }
           return {
             ...filter,
@@ -106,14 +105,68 @@ const NeighborsPage = () => {
     </div>
   );
 
-  const selectedPerson = selectedPersonId
+  const selectedPerson = activeFilter !== "duplicates" && selectedPersonId
     ? filteredPeople.find((p) => p.id === selectedPersonId)
     : null;
+
+  // Scroll card into view when it's opened
+  useEffect(() => {
+    if (selectedPerson && cardRef.current) {
+      cardRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [selectedPersonId]);
+
+  const handleSavePerson = async (personData: Omit<Person, "id">) => {
+    try {
+      // Only insert full_name, email, and address (matching Supabase column names)
+      const { error } = await supabase.from("people").insert({
+        full_name: personData.name,
+        email: personData.email,
+        address: personData.address,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      showToast("Neighbor added successfully!");
+      await refetch();
+    } catch (err) {
+      console.error("Error saving person:", err);
+      showToast("Failed to add neighbor. Please try again.");
+      throw err;
+    }
+  };
+
+  if (loading) {
+    return (
+      <AdminLayout header={header}>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="text-lg text-gray-600">Loading neighbors...</div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout header={header}>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="text-lg text-red-600 mb-2">Error loading neighbors</div>
+            <div className="text-sm text-gray-600">{error}</div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout header={header}>
       <div className="flex gap-6">
-        <div className={selectedPerson ? "w-2/3 transition-all duration-300" : "w-full transition-all duration-300"}>
+        <div className={selectedPerson && activeFilter !== "duplicates" ? "w-2/3 transition-all duration-300" : "w-full transition-all duration-300"}>
           <PeopleTable
             data={filteredPeople}
             selectedId={selectedPersonId || undefined}
@@ -123,18 +176,13 @@ const NeighborsPage = () => {
             onClose={() => {
               setSelectedPersonId(null);
             }}
-            onView={(person) => {
-              // TODO: Navigate to person detail once route is defined.
-              console.info("view person", person.id);
-            }}
-            onEdit={(person) => {
-              // TODO: Trigger edit flow once backend mutation exists.
-              console.info("edit person", person.id);
-            }}
+            showMembersColumns={activeFilter === "members"}
+            showDuplicatesView={activeFilter === "duplicates"}
+            duplicateMemberships={duplicateMemberships}
           />
         </div>
         {selectedPerson && (
-          <div className="w-1/3 transition-all duration-300">
+          <div ref={cardRef} className="w-1/3 transition-all duration-300 sticky top-8 self-start">
             <PersonDetailCard
               person={selectedPerson}
               onClose={() => {
@@ -144,6 +192,11 @@ const NeighborsPage = () => {
           </div>
         )}
       </div>
+      <PersonFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSavePerson}
+      />
     </AdminLayout>
   );
 };

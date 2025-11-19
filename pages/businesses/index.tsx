@@ -1,11 +1,15 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { useRouter } from "next/router";
 import AdminLayout from "@/components/layout/AdminLayout";
 import Topbar from "@/components/common/Topbar";
 import FilterTabs from "@/components/common/FilterTabs";
 import BusinessTable from "@/components/businesses/BusinessTable";
 import BusinessDetailCard from "@/components/businesses/BusinessDetailCard";
-import { businesses, BusinessStatus } from "@/data/businesses";
+import BusinessFormModal from "@/components/businesses/BusinessFormModal";
+import { BusinessStatus, Business } from "@/data/businesses";
+import { useBusinesses } from "@/hooks/useBusinesses";
+import { useToast } from "@/components/common/ToastProvider";
+import { supabase } from "@/lib/supabaseClient";
 
 const businessFilters: { id: "all" | BusinessStatus; label: string }[] = [
   { id: "all", label: "All Businesses" },
@@ -16,9 +20,13 @@ const businessFilters: { id: "all" | BusinessStatus; label: string }[] = [
 
 const BusinessesPage = () => {
   const router = useRouter();
+  const { businesses, loading, error, refetch } = useBusinesses();
+  const { showToast } = useToast();
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const filteredBusinesses = useMemo(() => {
     const normalized = searchTerm.toLowerCase();
@@ -37,15 +45,15 @@ const BusinessesPage = () => {
 
       return matchesFilter && matchesSearch;
     });
-  }, [activeFilter, searchTerm]);
+  }, [businesses, activeFilter, searchTerm]);
 
   const header = (
     <div className="space-y-4">
       <Topbar
         title="Businesses"
-        ctaLabel="Add new sponsor"
+        ctaLabel="Add new businesses"
         onAdd={() => {
-          // TODO: Hook into sponsor onboarding workflow.
+          setIsModalOpen(true);
         }}
         onSearch={setSearchTerm}
         searchPlaceholder="Search by company, contact, or event"
@@ -70,6 +78,69 @@ const BusinessesPage = () => {
     ? filteredBusinesses.find((b) => b.id === selectedBusinessId)
     : null;
 
+  // Scroll card into view when it's opened
+  useEffect(() => {
+    if (selectedBusiness && cardRef.current) {
+      cardRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [selectedBusinessId]);
+
+  const handleSaveBusiness = async (businessData: Omit<Business, "id">) => {
+    try {
+      // Only insert basic fields that are likely to exist
+      // Start with just name, email, and address like we did for people
+      const insertData: Record<string, any> = {
+        name: businessData.companyName,
+        email: businessData.email,
+        address: businessData.address,
+      };
+
+      // Add optional fields only if they might exist (we'll discover the actual columns from errors)
+      // For now, let's be conservative and only add the basics
+      // Uncomment these as we discover which columns exist:
+      // if (businessData.contactName) insertData.contact_name = businessData.contactName;
+      // if (businessData.phone) insertData.phone = businessData.phone;
+
+      const { error } = await supabase.from("businesses").insert(insertData);
+
+      if (error) {
+        throw error;
+      }
+
+      showToast("Business added successfully!");
+      await refetch();
+    } catch (err) {
+      console.error("Error saving business:", err);
+      showToast("Failed to add business. Please try again.");
+      throw err;
+    }
+  };
+
+  if (loading) {
+    return (
+      <AdminLayout header={header}>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="text-lg text-gray-600">Loading businesses...</div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout header={header}>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="text-lg text-red-600 mb-2">Error loading businesses</div>
+            <div className="text-sm text-gray-600">{error}</div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout header={header}>
       <div className="flex gap-6">
@@ -83,17 +154,10 @@ const BusinessesPage = () => {
             onClose={() => {
               setSelectedBusinessId(null);
             }}
-            onView={(business) => {
-              router.push(`/businesses/${business.id}`);
-            }}
-            onEmail={(business) => {
-              // TODO: Replace with integrated email template action.
-              // Email is now copied to clipboard via the Email button
-            }}
           />
         </div>
         {selectedBusiness && (
-          <div className="w-1/3 transition-all duration-300">
+          <div ref={cardRef} className="w-1/3 transition-all duration-300 sticky top-8 self-start">
             <BusinessDetailCard
               business={selectedBusiness}
               onClose={() => {
@@ -103,6 +167,11 @@ const BusinessesPage = () => {
           </div>
         )}
       </div>
+      <BusinessFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveBusiness}
+      />
     </AdminLayout>
   );
 };

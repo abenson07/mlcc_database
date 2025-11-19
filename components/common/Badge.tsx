@@ -8,11 +8,11 @@ type BadgeProps = {
 };
 
 const variants: Record<BadgeVariant, string> = {
-  default: "bg-neutral-100 text-neutral-700",
-  success: "bg-green-100 text-green-700",
+  default: "bg-primary-100 text-primary-800",
+  success: "bg-primary-200 text-primary-800",
   warning: "bg-amber-100 text-amber-700",
   danger: "bg-rose-100 text-rose-700",
-  info: "bg-blue-100 text-blue-700"
+  info: "bg-primary-100 text-primary-800"
 };
 
 const Badge = ({ children, variant = "default" }: BadgeProps) => {

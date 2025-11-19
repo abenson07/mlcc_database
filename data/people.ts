@@ -3,10 +3,25 @@ export type Person = {
   name: string;
   email: string;
   address: string;
-  membershipType: "Resident" | "Member" | "Volunteer" | "Partner";
-  volunteerInterests: string[];
-  isMember: boolean;
   householdId?: string;
+  membershipId?: string;
+  membershipTier?: string;
+  membershipStatus?: string;
+  lastRenewal?: string;
+};
+
+export type TierInfo = {
+  tier: string;
+  lastRenewal?: string;
+  stripeSubscriptionId?: string;
+  stripeCustomerId?: string;
+};
+
+export type DuplicateMembership = {
+  email: string;
+  personName?: string;
+  membershipCount: number;
+  tiers: TierInfo[];
 };
 
 export const people: Person[] = [
@@ -15,9 +30,6 @@ export const people: Person[] = [
     name: "Alex Johnson",
     email: "alex.johnson@example.com",
     address: "421 Pine Street, Maplewood",
-    membershipType: "Resident",
-    volunteerInterests: ["Newsletter Delivery", "Event Setup"],
-    isMember: true,
     householdId: "household-001"
   },
   {
@@ -25,9 +37,6 @@ export const people: Person[] = [
     name: "Morgan Lee",
     email: "morgan.lee@example.com",
     address: "77 Cedar Avenue, Maplewood",
-    membershipType: "Volunteer",
-    volunteerInterests: ["Fundraising", "Community Outreach"],
-    isMember: false,
     householdId: "household-002"
   },
   {
@@ -35,9 +44,6 @@ export const people: Person[] = [
     name: "Priya Desai",
     email: "priya.desai@example.com",
     address: "19 Birch Road, Maplewood",
-    membershipType: "Member",
-    volunteerInterests: ["Event Setup"],
-    isMember: true,
     householdId: "household-003"
   },
   {
@@ -45,9 +51,6 @@ export const people: Person[] = [
     name: "Jordan Smith",
     email: "jordan.smith@example.com",
     address: "301 Oak Lane, Maplewood",
-    membershipType: "Volunteer",
-    volunteerInterests: ["Newsletter Delivery"],
-    isMember: false,
     householdId: "household-004"
   },
   {
@@ -55,9 +58,6 @@ export const people: Person[] = [
     name: "Cameron Wu",
     email: "cameron.wu@example.com",
     address: "55 Elm Street, Maplewood",
-    membershipType: "Resident",
-    volunteerInterests: ["Community Garden", "Event Setup"],
-    isMember: true,
     householdId: "household-001"
   }
 ];

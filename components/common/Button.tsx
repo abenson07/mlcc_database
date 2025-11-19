@@ -11,11 +11,11 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-primary-600 text-white hover:bg-primary-700 focus-visible:ring-primary-500",
+    "bg-primary-700 text-white hover:bg-primary-800 focus-visible:ring-primary-700",
   secondary:
-    "bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-100 focus-visible:ring-primary-500",
+    "bg-cream-100 text-primary-700 border border-primary-300 hover:bg-primary-100 focus-visible:ring-primary-700",
   ghost:
-    "bg-transparent text-neutral-600 hover:bg-neutral-100 focus-visible:ring-primary-500"
+    "bg-transparent text-primary-700 hover:bg-primary-100 focus-visible:ring-primary-700"
 };
 
 const sizeStyles: Record<ButtonSize, string> = {

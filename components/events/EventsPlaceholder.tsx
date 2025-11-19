@@ -2,11 +2,11 @@ import Button from "@/components/common/Button";
 import { events } from "@/data/events";
 
 const EventsPlaceholder = () => (
-  <div className="rounded-lg border border-dashed border-neutral-300 bg-white p-10 text-center">
-    <h2 className="text-lg font-semibold text-neutral-900">
+  <div className="rounded-lg border border-dashed border-primary-300 bg-cream-100 p-10 text-center">
+    <h2 className="text-lg font-semibold text-primary-800">
       Events coming soon
     </h2>
-    <p className="mt-2 text-sm text-neutral-500">
+    <p className="mt-2 text-sm text-neutral-600">
       This view will surface campaign planning tools, volunteer assignments, and
       RSVP tracking. For now, review the sample events below.
     </p>
@@ -14,24 +14,24 @@ const EventsPlaceholder = () => (
       {events.map((event) => (
         <div
           key={event.id}
-          className="rounded-md border border-neutral-200 bg-neutral-50 p-4"
+          className="rounded-md border border-primary-200 bg-cream-100 p-4"
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h3 className="text-sm font-semibold text-neutral-900">
+              <h3 className="text-sm font-semibold text-primary-800">
                 {event.name}
               </h3>
-              <p className="text-xs text-neutral-500">
+              <p className="text-xs text-neutral-600">
                 {new Date(event.date).toLocaleDateString()} · {event.location}
               </p>
             </div>
-            <div className="text-xs text-neutral-500">
+            <div className="text-xs text-neutral-600">
               {event.attendees} attendees · {event.volunteersNeeded} volunteers
               needed
             </div>
           </div>
           {event.notes && (
-            <p className="mt-2 text-sm text-neutral-600">{event.notes}</p>
+            <p className="mt-2 text-sm text-neutral-700">{event.notes}</p>
           )}
         </div>
       ))}

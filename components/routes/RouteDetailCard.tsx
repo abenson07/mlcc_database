@@ -1,11 +1,18 @@
 import { useState, useEffect } from "react";
 import Badge from "@/components/common/Badge";
 import Button from "@/components/common/Button";
-import { Route, Deliverer } from "@/data/routes";
+import { Route } from "@/data/routes";
+
+type DelivererInfo = {
+  id: string;
+  name: string;
+  email: string;
+  address: string;
+};
 
 type RouteDetailCardProps = {
   route: Route;
-  deliverer?: Deliverer | null;
+  deliverer?: DelivererInfo | null;
   onClose: () => void;
 };
 
@@ -82,15 +89,15 @@ const RouteDetailCard = ({ route, deliverer, onClose }: RouteDetailCardProps) =>
   };
 
   return (
-    <div className="flex h-fit flex-col rounded-lg border border-neutral-900 bg-white p-6 shadow-sm">
+    <div className="flex h-fit flex-col rounded-lg border border-primary-300 bg-cream-100 p-6 shadow-sm">
       {/* Route Name Section */}
       <div className="mb-6 space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-base font-semibold text-neutral-900">Route name</h3>
+          <h3 className="text-base font-semibold text-primary-800">Route name</h3>
           <button
             type="button"
             onClick={handleClose}
-            className="text-sm text-neutral-500 hover:text-neutral-700"
+            className="text-sm text-neutral-600 hover:text-primary-800"
           >
             ✕
           </button>
@@ -108,78 +115,78 @@ const RouteDetailCard = ({ route, deliverer, onClose }: RouteDetailCardProps) =>
             type="text"
             value={formData.name}
             onChange={(e) => handleInputChange("name", e.target.value)}
-            className="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="w-full rounded border border-primary-300 bg-cream-100 px-3 py-2 text-sm text-neutral-700 focus:border-primary-700 focus:outline-none focus:ring-1 focus:ring-primary-700"
           />
           <input
             type="text"
             value={formData.dropoffLocation}
             onChange={(e) => handleInputChange("dropoffLocation", e.target.value)}
-            className="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="w-full rounded border border-primary-300 bg-cream-100 px-3 py-2 text-sm text-neutral-700 focus:border-primary-700 focus:outline-none focus:ring-1 focus:ring-primary-700"
           />
         </div>
       </div>
 
       {/* Route Details Section */}
       <div className="mb-6 space-y-3">
-        <h3 className="text-base font-semibold text-neutral-900">Route Details</h3>
+        <h3 className="text-base font-semibold text-primary-800">Route Details</h3>
         <div className="space-y-2">
-          <div className="flex items-center justify-between rounded border border-neutral-200 bg-white px-3 py-2">
+          <div className="flex items-center justify-between rounded border border-primary-200 bg-cream-100 px-3 py-2">
             <span className="text-sm text-neutral-700">Number of leaflets</span>
-            <span className="text-sm font-medium text-neutral-900">{route.leaflets}</span>
+            <span className="text-sm font-medium text-primary-800">{route.leaflets}</span>
           </div>
-          <div className="flex items-center justify-between rounded border border-neutral-200 bg-white px-3 py-2">
+          <div className="flex items-center justify-between rounded border border-primary-200 bg-cream-100 px-3 py-2">
             <span className="text-sm text-neutral-700">Created</span>
-            <span className="text-sm font-medium text-neutral-900">{createdAt}</span>
+            <span className="text-sm font-medium text-primary-800">{createdAt}</span>
           </div>
-          <div className="flex items-center justify-between rounded border border-neutral-200 bg-white px-3 py-2">
+          <div className="flex items-center justify-between rounded border border-primary-200 bg-cream-100 px-3 py-2">
             <span className="text-sm text-neutral-700">Last updated</span>
-            <span className="text-sm font-medium text-neutral-900">{lastUpdated}</span>
+            <span className="text-sm font-medium text-primary-800">{lastUpdated}</span>
           </div>
         </div>
       </div>
 
       {/* Deliverer Section */}
       <div className="mb-6 space-y-3">
-        <h3 className="text-base font-semibold text-neutral-900">Deliverer</h3>
+        <h3 className="text-base font-semibold text-primary-800">Deliverer</h3>
         {deliverer ? (
           <div className="space-y-2">
             <input
               type="text"
               value={formData.delivererName}
               onChange={(e) => handleInputChange("delivererName", e.target.value)}
-              className="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="w-full rounded border border-primary-300 bg-cream-100 px-3 py-2 text-sm text-neutral-700 focus:border-primary-700 focus:outline-none focus:ring-1 focus:ring-primary-700"
             />
             <input
               type="text"
               value={formData.delivererAddress}
               onChange={(e) => handleInputChange("delivererAddress", e.target.value)}
-              className="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="w-full rounded border border-primary-300 bg-cream-100 px-3 py-2 text-sm text-neutral-700 focus:border-primary-700 focus:outline-none focus:ring-1 focus:ring-primary-700"
             />
             <input
               type="email"
               value={formData.delivererEmail}
               onChange={(e) => handleInputChange("delivererEmail", e.target.value)}
-              className="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="w-full rounded border border-primary-300 bg-cream-100 px-3 py-2 text-sm text-neutral-700 focus:border-primary-700 focus:outline-none focus:ring-1 focus:ring-primary-700"
             />
           </div>
         ) : (
-          <p className="text-sm text-neutral-500">No deliverer assigned</p>
+          <p className="text-sm text-neutral-600">No deliverer assigned</p>
         )}
       </div>
 
       {/* Delivery History Section */}
       {deliveryHistory.length > 0 && (
         <div className="mb-6 space-y-3">
-          <h3 className="text-base font-semibold text-neutral-900">Delivery History</h3>
+          <h3 className="text-base font-semibold text-primary-800">Delivery History</h3>
           <div className="space-y-2">
             {deliveryHistory.map((delivery, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between rounded border border-neutral-200 bg-white px-3 py-2"
+                className="flex items-center justify-between rounded border border-primary-200 bg-cream-100 px-3 py-2"
               >
                 <div className="flex flex-col">
                   <span className="text-sm text-neutral-700">{delivery.date}</span>
-                  <span className="text-xs text-neutral-500">{delivery.deliverer}</span>
+                  <span className="text-xs text-neutral-600">{delivery.deliverer}</span>
                 </div>
                 <Badge variant={delivery.status === "Completed" ? "success" : "default"}>
                   {delivery.status}
@@ -191,7 +198,7 @@ const RouteDetailCard = ({ route, deliverer, onClose }: RouteDetailCardProps) =>
       )}
 
       {/* Save Button */}
-      <div className="mt-auto pt-4 border-t border-neutral-200">
+      <div className="mt-auto pt-4 border-t border-primary-200">
         <Button
           variant="primary"
           size="md"

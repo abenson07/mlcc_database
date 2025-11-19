@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import Topbar from "@/components/common/Topbar";
 import FilterTabs from "@/components/common/FilterTabs";
@@ -6,7 +6,7 @@ import RouteTable from "@/components/routes/RouteTable";
 import DelivererTable from "@/components/routes/DelivererTable";
 import OpenRoutesTable from "@/components/routes/OpenRoutesTable";
 import RouteDetailCard from "@/components/routes/RouteDetailCard";
-import { deliverers, openRoutes, routes } from "@/data/routes";
+import { useRoutes } from "@/hooks/useRoutes";
 
 type TabOption = "byRoute" | "byDeliverer" | "openRoutes";
 
@@ -17,30 +17,45 @@ const routeTabs = [
 ];
 
 const RoutesPage = () => {
+  const { routes, loading, error } = useRoutes();
   const [activeTab, setActiveTab] = useState<TabOption>("byRoute");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const normalizedSearch = searchTerm.toLowerCase();
 
+  // Filter routes for "By Route" tab - only show claimed routes
+  const claimedRoutes = useMemo(() => {
+    return routes.filter(route => route.primary_deliverer_id);
+  }, [routes]);
+
   const filteredRoutes = useMemo(() => {
-    if (!normalizedSearch) return routes;
-    return routes.filter(
+    if (!normalizedSearch) return claimedRoutes;
+    return claimedRoutes.filter(
       (route) =>
         route.name.toLowerCase().includes(normalizedSearch) ||
         route.dropoffLocation.toLowerCase().includes(normalizedSearch) ||
-        route.distributor?.toLowerCase().includes(normalizedSearch)
+        route.deliverer?.name.toLowerCase().includes(normalizedSearch) ||
+        route.deliverer?.email.toLowerCase().includes(normalizedSearch)
     );
-  }, [normalizedSearch]);
+  }, [normalizedSearch, claimedRoutes]);
 
-  const filteredDeliverers = useMemo(() => {
-    if (!normalizedSearch) return deliverers;
-    return deliverers.filter(
-      (deliverer) =>
-        deliverer.name.toLowerCase().includes(normalizedSearch) ||
-        deliverer.status.toLowerCase().includes(normalizedSearch)
-    );
-  }, [normalizedSearch]);
+  // Count unique deliverers for badge
+  const uniqueDeliverersCount = useMemo(() => {
+    const delivererIds = new Set<string>();
+    routes.forEach(route => {
+      if (route.primary_deliverer_id) {
+        delivererIds.add(route.primary_deliverer_id);
+      }
+    });
+    return delivererIds.size;
+  }, [routes]);
+
+  // Filter open routes (routes without primary_deliverer_id)
+  const openRoutes = useMemo(() => {
+    return routes.filter(route => !route.primary_deliverer_id);
+  }, [routes]);
 
   const filteredOpenRoutes = useMemo(() => {
     if (!normalizedSearch) return openRoutes;
@@ -49,7 +64,7 @@ const RoutesPage = () => {
         route.name.toLowerCase().includes(normalizedSearch) ||
         route.dropoffLocation.toLowerCase().includes(normalizedSearch)
     );
-  }, [normalizedSearch]);
+  }, [normalizedSearch, openRoutes]);
 
   // Reset selected route when switching tabs
   const handleTabChange = (id: string) => {
@@ -61,7 +76,7 @@ const RoutesPage = () => {
     <div className="space-y-4">
       <Topbar
         title="Routes"
-        ctaLabel="Add new route"
+        ctaLabel="Add new deliverer"
         onAdd={() => {
           // TODO: Launch route creation wizard when backend endpoints exist.
         }}
@@ -74,9 +89,9 @@ const RoutesPage = () => {
           ...tab,
           badgeCount:
             tab.id === "byRoute"
-              ? routes.length
+              ? claimedRoutes.length
               : tab.id === "byDeliverer"
-              ? deliverers.length
+              ? uniqueDeliverersCount
               : openRoutes.length
         }))}
         onTabChange={handleTabChange}
@@ -88,9 +103,39 @@ const RoutesPage = () => {
     ? filteredRoutes.find((r) => r.id === selectedRouteId)
     : null;
 
-  const selectedRouteDeliverer = selectedRoute
-    ? deliverers.find((d) => d.name === selectedRoute.distributor) || null
-    : null;
+  const selectedRouteDeliverer = selectedRoute?.deliverer || null;
+
+  // Scroll card into view when it's opened
+  useEffect(() => {
+    if (selectedRoute && cardRef.current) {
+      cardRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [selectedRouteId]);
+
+  if (loading) {
+    return (
+      <AdminLayout header={header}>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="text-lg text-gray-600">Loading routes...</div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout header={header}>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="text-lg text-red-600 mb-2">Error loading routes</div>
+            <div className="text-sm text-gray-600">{error}</div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout header={header}>
@@ -99,7 +144,6 @@ const RoutesPage = () => {
           <div className={selectedRoute ? "w-2/3 transition-all duration-300" : "w-full transition-all duration-300"}>
             <RouteTable
               data={filteredRoutes}
-              deliverers={deliverers}
               selectedId={selectedRouteId || undefined}
               onRowClick={(route) => {
                 setSelectedRouteId(route.id);
@@ -107,18 +151,10 @@ const RoutesPage = () => {
               onClose={() => {
                 setSelectedRouteId(null);
               }}
-              onAssign={(route) => {
-                // TODO: Connect to assignment workflow.
-                console.info("assign route", route.id);
-              }}
-              onPrint={(route) => {
-                // TODO: Generate printable route sheet.
-                console.info("print route", route.id);
-              }}
             />
           </div>
           {selectedRoute && (
-            <div className="w-1/3 transition-all duration-300">
+            <div ref={cardRef} className="w-1/3 transition-all duration-300 sticky top-8 self-start">
               <RouteDetailCard
                 route={selectedRoute}
                 deliverer={selectedRouteDeliverer}
@@ -132,7 +168,6 @@ const RoutesPage = () => {
       )}
       {activeTab === "byDeliverer" && (
         <DelivererTable
-          data={filteredDeliverers}
           routes={routes}
           searchTerm={searchTerm}
           onSkip={(deliverer) => {

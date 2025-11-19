@@ -38,7 +38,7 @@ const Toast = ({ message, isVisible, onClose, duration = 2000 }: ToastProps) => 
     <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2">
       <div
         className={clsx(
-          "rounded-lg bg-neutral-900 px-4 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300 ease-out",
+          "rounded-lg bg-primary-700 px-4 py-3 text-sm font-medium text-white shadow-lg transition-all duration-300 ease-out",
           isAnimating
             ? "translate-y-0 opacity-100"
             : "translate-y-[120%] opacity-0"

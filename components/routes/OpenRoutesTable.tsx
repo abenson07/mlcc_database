@@ -13,18 +13,23 @@ const columns: TableColumn<Route>[] = [
   { key: "dropoffLocation", header: "Dropoff Location" }
 ];
 
-const OpenRoutesTable = ({ data, onAssign }: OpenRoutesTableProps) => (
-  <Table
-    columns={columns}
-    data={data}
-    caption="Routes currently unassigned to deliverers"
-    rowAction={(route) => (
-      <Button variant="primary" size="sm" onClick={() => onAssign?.(route)}>
-        Assign
-      </Button>
-    )}
-  />
-);
+const OpenRoutesTable = ({ data, onAssign }: OpenRoutesTableProps) => {
+  // Filter to only show routes without primary_deliverer_id
+  const openRoutes = data.filter(route => !route.primary_deliverer_id);
+  
+  return (
+    <Table
+      columns={columns}
+      data={openRoutes}
+      caption="Routes currently unassigned to deliverers"
+      rowAction={(route) => (
+        <Button variant="primary" size="sm" onClick={() => onAssign?.(route)}>
+          Assign
+        </Button>
+      )}
+    />
+  );
+};
 
 export default OpenRoutesTable;
 

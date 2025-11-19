@@ -25,8 +25,8 @@ const FilterTabs = ({ tabs, activeId, onTabChange }: FilterTabsProps) => {
             className={clsx(
               "flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors",
               isActive
-                ? "border-primary-200 bg-primary-50 text-primary-700"
-                : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:text-neutral-900"
+                ? "border-primary-300 bg-primary-100 text-primary-800"
+                : "border-primary-200 bg-cream-100 text-neutral-700 hover:border-primary-300 hover:text-primary-800"
             )}
           >
             <span>{tab.label}</span>
@@ -35,8 +35,8 @@ const FilterTabs = ({ tabs, activeId, onTabChange }: FilterTabsProps) => {
                 className={clsx(
                   "inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-full px-2 text-xs font-semibold",
                   isActive
-                    ? "bg-primary-100 text-primary-700"
-                    : "bg-neutral-100 text-neutral-600"
+                    ? "bg-primary-200 text-primary-800"
+                    : "bg-cream-100 text-primary-700"
                 )}
               >
                 {tab.badgeCount}

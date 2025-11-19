@@ -11,11 +11,11 @@ const Sidebar = () => {
   const router = useRouter();
 
   return (
-    <aside className="hidden w-64 flex-shrink-0 border-r border-neutral-200 bg-white lg:block">
+    <aside className="hidden w-64 flex-shrink-0 border-r border-primary-200 bg-cream-100 lg:block">
       <div className="flex h-full flex-col">
-        <div className="border-b border-neutral-200 px-6 py-6">
+        <div className="border-b border-primary-200 px-6 py-6">
           <span className="text-lg font-semibold text-primary-700">MLCC</span>
-          <p className="text-sm text-neutral-500">Community Dashboard</p>
+          <p className="text-sm text-neutral-600">Community Dashboard</p>
         </div>
         <nav className="flex-1 px-4 py-6">
           <ul className="space-y-1">
@@ -27,8 +27,8 @@ const Sidebar = () => {
                     href={item.href}
                     className={`flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                       isActive
-                        ? "bg-primary-100 text-primary-700"
-                        : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
+                        ? "bg-primary-700 text-white hover:bg-primary-800 hover:text-white"
+                        : "text-neutral-700 hover:bg-primary-600 hover:text-white"
                     }`}
                   >
                     {item.label}
@@ -38,7 +38,7 @@ const Sidebar = () => {
             })}
           </ul>
         </nav>
-        <div className="border-t border-neutral-200 px-6 py-6 text-sm text-neutral-500">
+        <div className="border-t border-primary-200 px-6 py-6 text-sm text-neutral-600">
           <p>Built for MLCC community coordinators.</p>
         </div>
       </div>

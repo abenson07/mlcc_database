@@ -9,10 +9,11 @@ body,
 }
 
 body {
-  @apply bg-neutral-50 text-neutral-900;
+  background-color: #faf9f5;
+  @apply text-neutral-700;
 }
 
 a {
-  @apply text-primary-600 hover:text-primary-700;
+  @apply text-primary-700 hover:text-primary-800;
 }
 

@@ -1,0 +1,18 @@
+# API Routes Directory
+
+This directory contains Next.js API routes for server-side operations.
+
+## Structure
+
+- `/api/[domain]/[action].ts` - Domain-specific API endpoints
+  - Example: `/api/people/create.ts`
+  - Example: `/api/routes/assign.ts`
+
+## Guidelines
+
+- All API routes must use `serverSupabase` from `@/lib/serverSupabase`
+- All inputs must be validated with Zod
+- All responses should use generated database types
+- Handle errors consistently and return appropriate HTTP status codes
+
+
