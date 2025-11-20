@@ -32,6 +32,7 @@ yarn-error.log*
 # webflow cloud
 .wrangler
 worker-configuration.d.ts
+.open-next/
 
 # typescript
 *.tsbuildinfo

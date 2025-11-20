@@ -7,30 +7,33 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "db:migrate": "supabase db push",
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --linked > src/types/database.types.ts",
     "db:link": "supabase link --project-ref"
   },
   "dependencies": {
+    "@opennextjs/cloudflare": "1.6.5",
     "@supabase/supabase-js": "^2.81.1",
     "clsx": "2.1.0",
     "csv-parse": "^6.1.0",
     "dotenv": "^17.2.3",
-    "next": "14.1.0",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
+    "next": "^15.0.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
     "stripe": "^14.21.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "20.11.24",
-    "@types/react": "18.2.57",
-    "@types/react-dom": "18.2.18",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
     "autoprefixer": "10.4.17",
     "postcss": "8.4.35",
     "supabase": "^1.183.1",
     "tailwindcss": "3.4.1",
-    "typescript": "5.3.3"
+    "typescript": "5.3.3",
+    "wrangler": "^3.0.0"
   }
 }
