@@ -233,8 +233,19 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
 
 /**
  * Helper function to get raw body buffer for signature verification
+ * Compatible with both Node.js and Cloudflare Workers edge runtime
  */
 async function buffer(req: NextApiRequest): Promise<Buffer> {
+  // For edge runtime compatibility, try to get body directly if available
+  if (typeof req.body === 'string') {
+    return Buffer.from(req.body, 'utf-8');
+  }
+  
+  if (Buffer.isBuffer(req.body)) {
+    return req.body;
+  }
+
+  // Fallback to stream-based reading (Node.js)
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
     req.on('data', (chunk: Buffer) => {

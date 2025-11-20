@@ -29,6 +29,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# webflow cloud
+.wrangler
+worker-configuration.d.ts
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
